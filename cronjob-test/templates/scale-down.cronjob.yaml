@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.scaleDownCronJobName }} 
+spec:
+  schedule: {{ .Values.scaleDownJob.schedule | quote }}
+  successfulJobsHistoryLimit: {{ .Values.scaleDownJob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.scaleDownJob.failedJobsHistoryLimit }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ .Values.saName }}
+          containers:
+          - name: scale-down-job
+            image: {{ .Values.scaleDownJob.scaleDownJob.image.repository }}
+            command:
+            - /bin/sh
+            - -c
+            - kubectl patch hpa kamp --patch '{"spec":{"minReplicas":1}}'
+          restartPolicy: OnFailure
+          
